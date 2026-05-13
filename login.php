@@ -76,6 +76,7 @@ if (isset($_POST['masuk'])) {
                 Belum punya akun? <a href="register.php" style="color: #ce1212; text-decoration: none; font-weight: bold;">Daftar di sini</a>
             </p>
         </form> 
+        
     </div>
 
 </body>
