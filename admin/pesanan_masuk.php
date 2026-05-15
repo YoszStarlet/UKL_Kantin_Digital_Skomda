@@ -1,17 +1,40 @@
 <?php
+
 // memulai session untuk menyimpan data login pengguna
 session_start();
 
-// menghubungkan file ke database atau komponen lain
+// menghubungkan file ke konfigurasi database
 include '../config/koneksi.php';
 
 // memeriksa hak akses pengguna apakah sebagai admin
 if ($_SESSION['role'] != "admin") {
+
+    // mengalihkan halaman ke lokasi yang ditentukan
     header("location:../login.php");
+
+    // menghentikan eksekusi script
     exit;
 }
 
+// mengambil id stand milik admin dari data session
 $id_s = $_SESSION['id_stand'];
+
+// memvalidasi pengiriman data melalui metode GET untuk update status
+if (isset($_GET['selesaikan'])) {
+
+    // inisialisasi variabel id transaksi dari parameter URL
+    $id_t = $_GET['selesaikan'];
+
+    // menjalankan instruksi query update status transaksi di database
+    $update = mysqli_query($conn, "UPDATE transaksi SET status = 'Selesai' WHERE id_transaksi = '$id_t'");
+
+    // validasi jika instruksi query update berhasil dijalankan
+    if ($update) {
+
+        // menampilkan notifikasi pesan melalui javascript dan mengalihkan halaman
+        echo "<script>alert('Pesanan selesai! Status di siswa otomatis terupdate.'); window.location='pesanan_masuk.php';</script>";
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -19,21 +42,30 @@ $id_s = $_SESSION['id_stand'];
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pesanan Masuk - Kantin Skomda</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <style>
-        /* CSS INTERNAL UNTUK PESANAN MASUK */
         body {
             background-color: #f4f4f4;
         }
 
+        .admin-table th {
+            background-color: #ce1212;
+            color: white;
+            padding: 12px;
+        }
+
+        .admin-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
         .status-badge {
-            padding: 5px 12px;
+            padding: 6px 12px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
-            text-transform: uppercase;
+            display: inline-block;
         }
 
         .status-pending {
@@ -55,30 +87,13 @@ $id_s = $_SESSION['id_stand'];
             text-decoration: none;
             border-radius: 5px;
             font-size: 13px;
+            font-weight: bold;
             transition: 0.3s;
         }
 
         .btn-selesai:hover {
             background-color: #218838;
-        }
-
-        .kembali-link {
-            display: inline-block;
-            margin-bottom: 15px;
-            color: #ce1212;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .admin-table th {
-            background-color: #ce1212;
-            color: white;
-        }
-
-        .no-data {
-            text-align: center;
-            padding: 20px;
-            color: #888;
+            transform: scale(1.05);
         }
     </style>
 </head>
@@ -91,24 +106,22 @@ $id_s = $_SESSION['id_stand'];
         </div>
         <div class="nav-menu">
             <a href="dashboard.php" class="nav-link">Kelola Menu</a>
-            <a href="pesanan_masuk.php" class="nav-link active" style="background-color: #ce1212; padding: 5px 10px; border-radius: 4px;"> Pesanan Masuk</a>
+            <a href="pesanan_masuk.php" class="nav-link active">Pesanan Masuk</a>
             <a href="laporan.php" class="nav-link">Laporan</a>
-            <span class="admin-name">Admin: <strong><?php echo $_SESSION['username']; ?></strong></span>
             <a href="../logout.php" class="btn-logout">Logout</a>
         </div>
     </nav>
 
     <div class="admin-container">
         <div class="admin-header">
-            <a href="dashboard.php" class="kembali-link">← Kembali ke Dashboard</a>
-            <h2>Daftar Antrean Pesanan</h2>
+            <a href="dashboard.php" style="color: #ce1212; text-decoration: none; font-weight: bold;">← Kembali ke Dashboard</a>
+            <h2 style="margin-top: 15px;">Daftar Antrean Pesanan</h2>
         </div>
 
-        <table class="admin-table">
+        <table class="admin-table" style="width: 100%; border-collapse: collapse; background: white; margin-top: 20px;">
             <thead>
                 <tr>
                     <th>No. Transaksi</th>
-                    <th>Tanggal</th>
                     <th>Nama Pelanggan</th>
                     <th>Total Bayar</th>
                     <th>Status</th>
@@ -117,7 +130,8 @@ $id_s = $_SESSION['id_stand'];
             </thead>
             <tbody>
                 <?php
-                // query JOIN untuk ambil data transaksi
+
+                // menyusun instruksi query JOIN untuk mengambil data transaksi spesifik per stand
                 $query = "SELECT DISTINCT t.*, u.username 
                           FROM transaksi t
                           JOIN user u ON t.id_user = u.id_user
@@ -126,40 +140,38 @@ $id_s = $_SESSION['id_stand'];
                           WHERE m.id_stand = '$id_s'
                           ORDER BY t.id_transaksi DESC";
 
-                $conn = new mysqli('localhost', 'root', '', 'db_ukl_kantin');
-                if ($conn->connect_error) {
-                    die("Connection failed: " . $conn->connect_error);
-                }
-
+                // menjalankan instruksi query ke database
                 $sql = mysqli_query($conn, $query);
 
+                // validasi jika hasil query tidak menemukan data pesanan
                 if (mysqli_num_rows($sql) == 0) {
-                    echo "<tr><td colspan='6' class='no-data'>Belum ada pesanan yang masuk.</td></tr>";
+                    echo "<tr><td colspan='5' style='text-align:center; padding:30px; color:#888;'>Belum ada pesanan masuk.</td></tr>";
                 }
 
-                while ($d = mysqli_fetch_array($sql)) {
-                ?>
+                // melakukan perulangan untuk mengambil data hasil query menjadi array
+                while ($d = mysqli_fetch_array($sql)) { ?>
                     <tr>
-                        <td><strong>#<?php echo $d['id_transaksi']; ?></strong></td>
-                        <td><?php echo date('d M Y', strtotime($d['tgl_transaksi'])); ?></td>
+                        <td align="center"><strong>#<?php echo $d['id_transaksi']; ?></strong></td>
+
                         <td><?php echo $d['username']; ?></td>
+
                         <td>Rp <?php echo number_format($d['total_bayar'], 0, ',', '.'); ?></td>
-                        <td>
+
+                        <td align="center">
                             <?php if ($d['status'] == 'Pending') : ?>
-                                <span class="status-badge status-pending">Menunggu</span>
+                                <span class="status-badge status-pending">MENUNGGU</span>
                             <?php else : ?>
-                                <span class="status-badge status-selesai">Selesai</span>
+                                <span class="status-badge status-selesai">SELESAI</span>
                             <?php endif; ?>
                         </td>
-                        <td>
+
+                        <td align="center">
                             <?php if ($d['status'] == 'Pending') : ?>
-                                <a href="update_status.php?id=<?php echo $d['id_transaksi']; ?>"
+                                <a href="pesanan_masuk.php?selesaikan=<?php echo $d['id_transaksi']; ?>"
                                     class="btn-selesai"
-                                    onclick="return confirm('Yakin pesanan ini sudah selesai?')">
-                                    Selesaikan
-                                </a>
+                                    onclick="return confirm('Yakin pesanan ini sudah selesai?')">Selesaikan</a>
                             <?php else : ?>
-                                <span style="color: #bbb;">Sudah Diproses</span>
+                                <span style="color: #28a745; font-weight: bold;">✅ Selesai</span>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -167,7 +179,11 @@ $id_s = $_SESSION['id_stand'];
             </tbody>
         </table>
     </div>
-
 </body>
 
 </html>
+
+<?php
+// menghubungkan file ke komponen footer
+include '../includes/footer.php';
+?>

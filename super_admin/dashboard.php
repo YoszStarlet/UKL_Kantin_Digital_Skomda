@@ -1,22 +1,34 @@
 <?php
+
+// memulai session untuk menyimpan data login pengguna
 session_start();
+
+// menghubungkan file ke konfigurasi database
 include '../config/koneksi.php';
 
-// Proteksi: Cek apakah yang masuk beneran super_admin
+// memeriksa hak akses pengguna apakah sebagai super_admin
 if ($_SESSION['role'] != "super_admin") {
+
+    // mengalihkan halaman ke lokasi yang ditentukan
     header("location:../login.php");
+
+    // menghentikan eksekusi script
     exit;
 }
 
-// 1. Total Stand
+// menyusun instruksi query untuk menghitung total data stand
 $q_stand = mysqli_query($conn, "SELECT COUNT(*) as total FROM stand");
+
+// mengambil hasil query penghitungan total stand
 $t_stand = mysqli_fetch_assoc($q_stand)['total'];
 
-// 2. Total Siswa
+// menyusun instruksi query untuk menghitung total data user dengan role siswa
 $q_siswa = mysqli_query($conn, "SELECT COUNT(*) as total FROM user WHERE role='siswa'");
+
+// mengambil hasil query penghitungan total siswa
 $t_siswa = mysqli_fetch_assoc($q_siswa)['total'];
 
-// 3. Query Omzet per Stand (VERSI FIX - Jalur Menu)
+// menyusun instruksi query JOIN multi-tabel untuk menghitung total omzet per stand
 $q_omzet_per_stand = mysqli_query($conn, "
     SELECT 
         s.nama_stand, 
@@ -31,26 +43,75 @@ $q_omzet_per_stand = mysqli_query($conn, "
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <title>Dashboard Super Admin - Skomda</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <style>
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 20px; }
-        .stat-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
-        .stat-card h3 { color: #666; font-size: 0.9rem; }
-        .stat-card p { font-size: 1.8rem; font-weight: bold; color: #ce1212; margin-top: 10px; }
-        
-        .omzet-container { margin-top: 20px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .omzet-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee; }
-        .omzet-item:last-child { border-bottom: none; }
-        .stand-name { font-weight: bold; color: #333; }
-        .stand-amount { font-weight: bold; color: #ce1212; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .stat-card p {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ce1212;
+            margin-top: 10px;
+        }
+
+        .omzet-container {
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .omzet-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .omzet-item:last-child {
+            border-bottom: none;
+        }
+
+        .stand-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stand-amount {
+            font-weight: bold;
+            color: #ce1212;
+        }
     </style>
 </head>
+
 <body>
     <nav class="main-nav">
-        <div class="nav-brand"><h1>SUPER ADMIN SKOMDA</h1></div>
+        <div class="nav-brand">
+            <h1>SUPER ADMIN SKOMDA</h1>
+        </div>
         <div class="nav-menu">
             <a href="dashboard.php" class="nav-link">Dashboard</a>
             <a href="manage_stand.php" class="nav-link">Manage Stand</a>
@@ -76,30 +137,32 @@ $q_omzet_per_stand = mysqli_query($conn, "
 
         <div class="omzet-container">
             <h3 style="color: #666; font-size: 1rem; margin-bottom: 15px;">Daftar Omzet per Stand</h3>
-            <?php 
-            // Cek apakah query berhasil
-            if($q_omzet_per_stand) {
-                while($row = mysqli_fetch_assoc($q_omzet_per_stand)) {
-                    ?>
+            <?php
+            // memvalidasi apakah instruksi query omzet berhasil dijalankan
+            if ($q_omzet_per_stand) {
+
+                // melakukan perulangan untuk mengambil data omzet hasil query menjadi array
+                while ($row = mysqli_fetch_assoc($q_omzet_per_stand)) {
+            ?>
                     <div class="omzet-item">
                         <span class="stand-name"><?php echo $row['nama_stand']; ?></span>
+
                         <span class="stand-amount">Rp <?php echo number_format($row['total_omzet'] ?? 0, 0, ',', '.'); ?></span>
                     </div>
-                    <?php
+            <?php
                 }
             } else {
+                // menampilkan pesan error jika query gagal dijalankan
                 echo "<p style='color:red;'>Gagal memuat data: " . mysqli_error($conn) . "</p>";
             }
             ?>
         </div>
-
-        <div style="margin-top: 40px; background: white; padding: 20px; border-radius: 10px;">
-            <h3>Menu Utama Manajemen</h3>
-            <div style="display: flex; gap: 15px; margin-top: 15px;">
-                <a href="manage_stand.php" class="btn-simpan" style="text-decoration: none;">Kelola Akun Stand</a>
-                <a href="manage_user.php" class="btn-kembali" style="text-decoration: none; background: #333;">Kelola Data Siswa</a>
-            </div>
-        </div>
     </div>
 </body>
+
 </html>
+
+<?php
+// menghubungkan file ke komponen footer
+include '../includes/footer.php';
+?>

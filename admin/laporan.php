@@ -112,3 +112,7 @@ $hari_ini = date('Y-m-d');
     </div>
 </body>
 </html>
+<?php
+// menghubungkan file ke database
+include '../includes/footer.php';
+?>

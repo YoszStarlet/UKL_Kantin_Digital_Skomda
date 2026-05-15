@@ -121,3 +121,7 @@ if ($_SESSION['role'] != "admin") {
 </body>
 
 </html>
+<?php
+// menghubungkan file ke database
+include '../includes/footer.php';
+?>

@@ -100,7 +100,7 @@ if (isset($_POST['simpan'])) {
             <form method="POST" enctype="multipart/form-data">
                 <div class="input-group">
                     <label>Nama Menu</label>
-                    <input type="text" name="nama" placeholder="Misal: Bakso Aci Spesial" required>
+                    <input type="text" name="nama" placeholder="Misal: Kentung Goreng Spesial" required>
                 </div>
 
                 <div class="input-group">
@@ -128,3 +128,7 @@ if (isset($_POST['simpan'])) {
 </body>
 
 </html>
+<?php
+// menghubungkan file ke database
+include '../includes/footer.php';
+?>
