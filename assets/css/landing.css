@@ -10,14 +10,20 @@ body {
   scroll-behavior: smooth;
 }
 
-/* hero sectio */
+/* hero section */
 .hero {
   height: 80vh;
   background:
     linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
-    url("../img/kantin-bg.jpg"); /* url img kantin */
+    url("../img/foto_kantin\ 1.jpg"); /* GANTI FORMAT JADI .jpg ATAU .png */
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat; /* Tambahan biar gambar gak ngulang kalau layar kegedean */
+  
+  /* Trik booster browser untuk ningkatain ketajaman background image */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -25,15 +31,6 @@ body {
   color: white;
   text-align: center;
   padding: 0 20px;
-}
-.hero h1 {
-  font-size: 3rem;
-  margin-bottom: 10px;
-}
-.hero p {
-  font-size: 1.2rem;
-  margin-bottom: 30px;
-  opacity: 0.9;
 }
 
 /* tombol akses utama */
