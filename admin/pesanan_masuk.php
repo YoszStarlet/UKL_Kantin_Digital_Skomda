@@ -95,10 +95,20 @@ if (isset($_GET['selesaikan'])) {
             background-color: #218838;
             transform: scale(1.05);
         }
+        
+        /* styling untuk wadah penampung notifikasi alert mengambang */
+        .notif-box {
+            position: fixed; top: 20px; right: 20px; background: #ce1212; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; display: none; font-weight: bold; animation: slideIn 0.5s ease;
+        }
+        
+        /* animasi efek bergeser masuk untuk element notifikasi box */
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
     </style>
 </head>
 
 <body>
+
+    <div id="alertNotif" class="notif-box">🔔 Ada pesanan baru masuk! Harap segera diproses.</div>
 
     <nav class="main-nav">
         <div class="nav-brand">
@@ -179,6 +189,39 @@ if (isset($_GET['selesaikan'])) {
             </tbody>
         </table>
     </div>
+
+    <script>
+        // menginisialisasi variabel penampung data jumlah antrean lama bawaan sistem
+        let jumlahLama = null;
+
+        // mendefinisikan fungsi polling untuk memantau aktivitas transaksi di database
+        function cekAntreanKantin() {
+            // melakukan request background fetch ke file cek_notif_admin.php yang terpisah murni json
+            fetch('cek_notif_admin.php')
+                // mengonversi dokumen respon hasil data menjadi bentuk objek json javascript
+                .then(response => response.json())
+                // mengolah struktur data objek yang dikembangkan oleh server basis data
+                .then(data => {
+                    // jika variabel status data antrean lama belum terisi data nilai
+                    if (jumlahLama === null) {
+                        // mengisi data nilai awal sesuai record jumlah pesanan saat ini
+                        jumlahLama = parseInt(data.total);
+                    } else if (parseInt(data.total) > jumlahLama) {
+                        // menampilkan element kotak pop-up info notifikasi jika ada lonjakan data baru
+                        document.getElementById('alertNotif').style.display = 'block';
+                        // memperbarui isi nilai pembanding dengan jumlah total pesanan yang baru
+                        jumlahLama = parseInt(data.total);
+                        // memicu fungsi reload halaman otomatis setelah jeda waktu 2 detik berlalu
+                        setTimeout(() => { window.location.reload(); }, 2000);
+                    } else {
+                        // menyamakan kembali nilai variabel kontrol jika jumlah transaksi berkurang atau selesai
+                        jumlahLama = parseInt(data.total);
+                    }
+                });
+        }
+        // memerintahkan browser mengeksekusi berulang fungsi cek antrean setiap jeda waktu 3 detik
+        setInterval(cekAntreanKantin, 3000);
+    </script>
 </body>
 
 </html>

@@ -1,10 +1,18 @@
 <?php
+// memulai session untuk menyimpan data login pengguna
 session_start();
+
+// mengatur zona waktu sistem ke waktu indonesia barat agar jam tidak ngaco
+date_default_timezone_set('Asia/Jakarta');
+
+// menghubungkan file ke konfigurasi database
 include 'config/koneksi.php';
 
 // 1. Ambil ID User dari Session
 $id_user = $_SESSION['id_user'];
-$tgl_transaksi = date("Y-m-d");
+
+// menambahkan format jam menit detik agar tgl_transaksi menjadi dinamis real-time
+$tgl_transaksi = date("Y-m-d H:i:s");
 
 // 2. Tarik data keranjang
 $query_keranjang = "SELECT keranjang.*, menu.harga 

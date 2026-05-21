@@ -75,6 +75,42 @@ if (isset($_POST['simpan_stand'])) {
     }
 }
 
+// memvalidasi pengiriman data melalui metode POST untuk edit stand
+if (isset($_POST['update_stand'])) {
+
+    // mengambil data inputan id stand dari form edit
+    $id_stand = $_POST['id_stand'];
+
+    // mengambil data inputan nama stand baru dari form edit
+    $nama_stand = $_POST['nama_stand'];
+
+    // mengambil nama file gambar qris baru jika diunggah
+    $foto_qris = $_FILES['foto_qris']['name'];
+
+    // jika pengguna memilih untuk mengganti foto qris stand
+    if (!empty($foto_qris)) {
+
+        // mengambil temporary folder lokasi file gambar baru
+        $tmp = $_FILES['foto_qris']['tmp_name'];
+
+        // menentukan lokasi folder penyimpanan aset gambar
+        $path = "../assets/img/" . $foto_qris;
+
+        // memindahkan file gambar baru ke direktori tujuan
+        move_uploaded_file($tmp, $path);
+
+        // memperbarui data nama stand beserta file foto qris baru di database
+        mysqli_query($conn, "UPDATE stand SET nama_stand = '$nama_stand', foto_qris = '$foto_qris' WHERE id_stand = '$id_stand'");
+    } else {
+
+        // memperbarui data nama stand saja tanpa mengubah foto qris yang sudah ada
+        mysqli_query($conn, "UPDATE stand SET nama_stand = '$nama_stand' WHERE id_stand = '$id_stand'");
+    }
+
+    // menampilkan pesan pemberitahuan sukses dan mengarahkan kembali halaman
+    echo "<script>alert('Data stand berhasil diperbarui!'); window.location='manage_stand.php';</script>";
+}
+
 // menyusun instruksi query untuk mengambil seluruh data stand
 $data_stand = mysqli_query($conn, "SELECT * FROM stand");
 ?>
@@ -100,6 +136,27 @@ $data_stand = mysqli_query($conn, "SELECT * FROM stand");
     <div class="admin-container">
         <h2>Kelola Stand Kantin</h2>
         
+        <?php if(isset($_GET['edit_id'])): 
+            // mengambil data stand spesifik yang dipilih berdasarkan parameter id edit
+            $id_edit = $_GET['edit_id'];
+            // menjalankan query untuk mengambil data lama stand yang akan diubah
+            $query_edit = mysqli_query($conn, "SELECT * FROM stand WHERE id_stand = '$id_edit'");
+            // memecah baris data stand lama menjadi struktur data array
+            $e = mysqli_fetch_assoc($query_edit);
+        ?>
+        <div class="form-card" style="margin-top: 20px; background: #fff3cd; padding: 20px; border-radius: 10px; border: 1px solid #ffeeba;">
+            <h3>Edit Data Stand</h3>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="id_stand" value="<?php echo $e['id_stand']; ?>">
+                <label style="font-size: 0.9rem; color: #555;">Nama Stand:</label>
+                <input type="text" name="nama_stand" value="<?php echo $e['nama_stand']; ?>" required style="width: 100%; margin-bottom: 10px; padding: 8px;">
+                <label style="font-size: 0.9rem; color: #555;">Foto QRIS Saat Ini: <img src="../assets/img/<?php echo $e['foto_qris']; ?>" width="30"></label><br>
+                <input type="file" name="foto_qris" style="margin-top: 5px; margin-bottom: 15px;"><br>
+                <button type="submit" name="update_stand" style="background: #ffc107; color: black; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">Perbarui</button>
+                <a href="manage_stand.php" style="margin-left: 10px; color: #666; text-decoration: none; font-size: 0.9rem;">Batal</a>
+            </form>
+        </div>
+        <?php else: ?>
         <div class="form-card" style="margin-top: 20px; background: #f9f9f9; padding: 20px; border-radius: 10px;">
             <h3>Tambah Stand Baru</h3>
             <form method="POST" enctype="multipart/form-data">
@@ -110,6 +167,7 @@ $data_stand = mysqli_query($conn, "SELECT * FROM stand");
                 <button type="submit" name="simpan_stand" class="btn-simpan">Simpan</button>
             </form>
         </div>
+        <?php endif; ?>
 
         <div style="margin-top: 30px;">
             <h3>Daftar Stand Saat Ini</h3>
@@ -132,6 +190,10 @@ $data_stand = mysqli_query($conn, "SELECT * FROM stand");
                     <td align="center"><img src="../assets/img/<?php echo $s['foto_qris']; ?>" width="50"></td>
 
                     <td align="center">
+                        <a href="manage_stand.php?edit_id=<?php echo $s['id_stand']; ?>" 
+                           style="background: #ffc107; color: black; padding: 5px 10px; text-decoration: none; border-radius: 5px; font-size: 0.8rem; margin-right: 5px;">
+                           Edit Stand
+                        </a>
                         <a href="manage_stand.php?hapus=<?php echo $s['id_stand']; ?>" 
                            onclick="return confirm('Peringatan! Menghapus stand ini akan menghapus akun admin dan semua menu terkait. Lanjutkan?')"
                            style="background: #ce1212; color: white; padding: 5px 10px; text-decoration: none; border-radius: 5px; font-size: 0.8rem;">

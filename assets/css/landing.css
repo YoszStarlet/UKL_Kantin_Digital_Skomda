@@ -15,12 +15,12 @@ body {
   height: 80vh;
   background:
     linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
-    url("../img/foto_kantin\ 1.jpg"); /* GANTI FORMAT JADI .jpg ATAU .png */
+    url("../img/foto_kantin\ 1.jpg"); 
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat; /* Tambahan biar gambar gak ngulang kalau layar kegedean */
+  background-repeat: no-repeat; 
   
-  /* Trik booster browser untuk ningkatain ketajaman background image */
+  /* booster browser untuk meningkatkan ketajaman background image */
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
 
@@ -47,6 +47,10 @@ body {
 .btn-start:hover {
   transform: translateY(-3px);
   background-color: #a00e0e;
+  -webkit-transform: translateY(-3px);
+  -moz-transform: translateY(-3px);
+  -ms-transform: translateY(-3px);
+  -o-transform: translateY(-3px);
 }
 
 /* section about */

@@ -2,6 +2,9 @@
 // memulai session untuk menyimpan data login pengguna
 session_start();
 
+// mengatur zona waktu sistem ke waktu indonesia barat agar fungsi jam sinkron
+date_default_timezone_set('Asia/Jakarta');
+
 // menghubungkan file ke database atau komponen lain
 include '../config/koneksi.php';
 
@@ -17,6 +20,8 @@ if ($_SESSION['role'] != "admin") {
 }
 
 $id_s = $_SESSION['id_stand'];
+
+// membersihkan spasi sisa agar format tanggal murni tanpa jam terkunci sempurna
 $hari_ini = date('Y-m-d');
 ?>
 
@@ -56,11 +61,11 @@ $hari_ini = date('Y-m-d');
         </div>
 
         <?php
-        // Query hitung total hari ini
+        // mengubah filter query menggunakan fungsi date agar pencarian record datetime valid
         $q_total = mysqli_query($conn, "SELECT SUM(t.total_bayar) as total FROM transaksi t 
                                         JOIN detail_transaksi dt ON t.id_transaksi = dt.id_transaksi
                                         JOIN menu m ON dt.id_menu = m.id_menu
-                                        WHERE m.id_stand = '$id_s' AND t.status = 'Selesai' AND t.tgl_transaksi = '$hari_ini'");
+                                        WHERE m.id_stand = '$id_s' AND t.status = 'Selesai' AND DATE(t.tgl_transaksi) = '$hari_ini'");
         $d_total = mysqli_fetch_assoc($q_total);
         $pendapatan = $d_total['total'] ?? 0;
         ?>
@@ -87,11 +92,12 @@ $hari_ini = date('Y-m-d');
             </thead>
             <tbody>
                 <?php
+                // membungkus parameter tgl_transaksi database dengan date murni agar relasi jam dinamis terbaca
                 $q_list = mysqli_query($conn, "SELECT DISTINCT t.*, u.username FROM transaksi t 
                                                JOIN user u ON t.id_user = u.id_user
                                                JOIN detail_transaksi dt ON t.id_transaksi = dt.id_transaksi
                                                JOIN menu m ON dt.id_menu = m.id_menu
-                                               WHERE m.id_stand = '$id_s' AND t.status = 'Selesai' AND t.tgl_transaksi = '$hari_ini'
+                                               WHERE m.id_stand = '$id_s' AND t.status = 'Selesai' AND DATE(t.tgl_transaksi) = '$hari_ini'
                                                ORDER BY t.id_transaksi DESC");
                 
                 if(mysqli_num_rows($q_list) == 0) {

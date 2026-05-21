@@ -46,6 +46,49 @@ if (isset($_GET['hapus'])) {
     }
 }
 
+// memvalidasi pengiriman data melalui metode POST untuk simpan user baru oleh superadmin
+if (isset($_POST['simpan_user'])) {
+
+    // mengambil data inputan username baru untuk siswa
+    $username = $_POST['username'];
+
+    // mengenkripsi data password baru menggunakan md5
+    $password = md5($_POST['password']);
+
+    // menjalankan query insert untuk membuat akun siswa baru di database
+    mysqli_query($conn, "INSERT INTO user (username, password, role) VALUES ('$username', '$password', 'siswa')");
+
+    // menampilkan pop-up notifikasi sukses dan memuat kembali halaman manajemen user
+    echo "<script>alert('Akun siswa baru berhasil ditambahkan!'); window.location='manage_user.php';</script>";
+}
+
+// memvalidasi pengiriman data melalui metode POST untuk simpan edit user
+if (isset($_POST['update_user'])) {
+
+    // mengambil data id user yang akan diubah datanya
+    $id_user = $_POST['id_user'];
+
+    // mengambil data username baru dari inputan form edit
+    $username = $_POST['username'];
+
+    // jika pengguna juga menginputkan password baru
+    if (!empty($_POST['password'])) {
+
+        // mengenkripsi password baru menggunakan fungsi md5
+        $password = md5($_POST['password']);
+
+        // memperbarui nama username beserta password baru ke tabel database
+        mysqli_query($conn, "UPDATE user SET username = '$username', password = '$password' WHERE id_user = '$id_user'");
+    } else {
+
+        // memperbarui username saja tanpa menyentuh field password lama siswa
+        mysqli_query($conn, "UPDATE user SET username = '$username' WHERE id_user = '$id_user'");
+    }
+
+    // menampilkan alert javascript sukses perubahan data dan kembali ke halaman utama
+    echo "<script>alert('Data akun siswa berhasil diperbarui!'); window.location='manage_user.php';</script>";
+}
+
 // menyusun instruksi query untuk mengambil data seluruh user dengan role siswa
 $data_siswa = mysqli_query($conn, "SELECT * FROM user WHERE role = 'siswa' ORDER BY id_user DESC");
 ?>
@@ -71,6 +114,37 @@ $data_siswa = mysqli_query($conn, "SELECT * FROM user WHERE role = 'siswa' ORDER
     <div class="admin-container">
         <h2>Manajemen Data Siswa</h2>
         <p>Daftar seluruh siswa yang terdaftar di aplikasi Kantin Skomda.</p>
+
+        <?php if(isset($_GET['edit_id'])): 
+            // mengambil data parameter id user yang akan dimodifikasi
+            $id_edit = $_GET['edit_id'];
+            // mencari data record user yang sesuai dengan id yang dipilih
+            $query_edit = mysqli_query($conn, "SELECT * FROM user WHERE id_user = '$id_edit' AND role = 'siswa'");
+            // mengonversi baris database menjadi data array php
+            $u_edit = mysqli_fetch_assoc($query_edit);
+        ?>
+        <div class="form-card" style="margin-top: 20px; background: #fff3cd; padding: 20px; border-radius: 10px; border: 1px solid #ffeeba;">
+            <h3>Edit Akun Siswa</h3>
+            <form method="POST">
+                <input type="hidden" name="id_user" value="<?php echo $u_edit['id_user']; ?>">
+                <label style="font-size: 0.9rem; color: #555;">Username Baru:</label>
+                <input type="text" name="username" value="<?php echo $u_edit['username']; ?>" required style="width: 100%; margin-bottom: 10px; padding: 8px;">
+                <label style="font-size: 0.9rem; color: #555;">Password Baru (Kosongkan jika tidak diganti):</label>
+                <input type="password" name="password" placeholder="Masukkan password baru" style="width: 100%; margin-bottom: 15px; padding: 8px;">
+                <button type="submit" name="update_user" style="background: #ffc107; color: black; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">Perbarui Akun</button>
+                <a href="manage_user.php" style="margin-left: 10px; color: #666; text-decoration: none; font-size: 0.9rem;">Batal</a>
+            </form>
+        </div>
+        <?php else: ?>
+        <div class="form-card" style="margin-top: 20px; background: #f9f9f9; padding: 20px; border-radius: 10px;">
+            <h3>Tambah Akun Siswa Baru</h3>
+            <form method="POST">
+                <input type="text" name="username" placeholder="Username Siswa Baru" required style="width: 100%; margin-bottom: 10px; padding: 8px;">
+                <input type="password" name="password" placeholder="Password Siswa Baru" required style="width: 100%; margin-bottom: 15px; padding: 8px;">
+                <button type="submit" name="simpan_user" class="btn-simpan">Tambah Akun</button>
+            </form>
+        </div>
+        <?php endif; ?>
 
         <div style="margin-top: 20px;">
             <table border="1" style="width: 100%; border-collapse: collapse; background: white;">
@@ -101,6 +175,10 @@ $data_siswa = mysqli_query($conn, "SELECT * FROM user WHERE role = 'siswa' ORDER
                             </td>
 
                             <td align="center" style="padding: 10px;">
+                                <a href="manage_user.php?edit_id=<?php echo $u['id_user']; ?>" 
+                                   style="color: black; background: #ffc107; padding: 5px 10px; text-decoration: none; border-radius: 5px; font-size: 0.8rem; margin-right: 5px;">
+                                   Edit Akun
+                                </a>
                                 <a href="manage_user.php?hapus=<?php echo $u['id_user']; ?>" 
                                    onclick="return confirm('Yakin ingin menghapus user ini? Perhatian: Semua riwayat transaksi siswa ini juga akan dihapus permanen!')" 
                                    style="color: white; background: #ce1212; padding: 5px 10px; text-decoration: none; border-radius: 5px; font-size: 0.8rem;">
